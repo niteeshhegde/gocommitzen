@@ -1,0 +1,31 @@
+{
+    "type": {
+        "minLength": 1,
+        "maxLength": 5,
+        "acceptExtra": true,
+        "values": [
+            "feat",
+            "fix"
+        ]
+    },
+    "scope": {
+        "minLength": 0,
+        "maxLength": 10,
+        "acceptExtra": true,
+        "values": []
+    },
+    "description": {
+        "minLength": 1,
+        "maxLength": 44
+    },
+    "subject": {
+        "minLength": 1,
+        "maxLength": 50
+    },
+    "body": {
+        "wrap": 72
+    },
+    "footer": {
+        "wrap": 72
+    }
+}
