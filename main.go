@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -8,60 +9,84 @@ import (
 )
 
 var extraKeyName string = "personalized"
+var skipKeyName string = "skip"
 
 func createCommit(subject string, body string, footer string) ([]byte, error) {
 	cmd := exec.Command("git", "commit", "-m", subject, "-m", body, "-m", footer)
 	stdout, err := cmd.Output()
 
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, fmt.Errorf(err.Error())
 	}
 
 	return stdout, nil
 }
 
+func usage() {
+	fmt.Println("Description: gocommitzen provides an interface for using conventional commits for your code")
+	printHeader(" 1. commit")
+	fmt.Println("  This command asks for all components of the conventional commit and commits the code.")
+	printInput(" Usage:")
+	printSkipping(" gocommitzen commit -a -p -c 'home/user/config.json'")
+	printInput(" Args:")
+	flag.PrintDefaults()
+}
+
+func fileExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
 func main() {
-	commitCommand := flag.NewFlagSet("commit", flag.ExitOnError)
-	addAllFilesPtr := commitCommand.Bool("a", false, "Boolean value refering to stage all files")
-	personalizedCommitPtr := commitCommand.Bool("p", false, "Boolean value allowing you to add custom type and scope skipping choises")
-	configFilePtr := commitCommand.String("c", "", "String value refering to path of the config file for conventional commits")
-	commitCommand.Usage = func() {
-		fmt.Println("Description: gocommitzen provides an interface for using conventional commits for your code")
-		printHeader(" 1. commit")
-		fmt.Println("  This command asks for all components of the conventional commit and commits the code.")
-		printInput(" Usage:")
-		printSkipping(" gocommitzen commit -a -p -c 'home/user/config.json'")
-		printInput(" Args:")
-		commitCommand.PrintDefaults()
-	}
-	switch os.Args[1] {
-	case "commit":
-		commitCommand.Parse(os.Args[2:])
-	default:
-		commitCommand.Usage()
+	var a, p bool
+	var c string
+
+	flag.BoolVar(&a, "a", false, "Boolean value refering to stage all files")
+	flag.BoolVar(&p, "p", false, "Boolean value allowing you to add custom type and scope skipping choises")
+	flag.StringVar(&c, "c", "", "String value refering to path of the config file for conventional commits")
+
+	flag.Parse()
+	if flag.Parsed() == false {
+		usage()
 		os.Exit(1)
 	}
-	if commitCommand.Parsed() == false {
-		commitCommand.Usage()
-		os.Exit(1)
+	if c == "" {
+		currentDir, err := os.Getwd()
+		if err != nil {
+			printError(fmt.Sprintf("%s", err))
+		}
+		if fileExists(currentDir + "/commit.json") {
+			c = currentDir + "/commit.json"
+		}
 	}
 
-	config, err := newConfig(*configFilePtr)
-	typeEntered := createType(config, *personalizedCommitPtr)
-	scopeEntered := createScope(config, *personalizedCommitPtr)
-	descriptionEntered := createDescription(config)
-	bodyEntered := createBody(config)
-	footerEntered := createFooter(config)
+	config, err := newConfig(c)
+	if err != nil {
+		printError(fmt.Sprintf("%s", err))
+		return
+	}
+	reader := bufio.NewReader(os.Stdin)
+	//handle err
+	// t := reflect.TypeOf(config)
+	// reader := bufio.NewReader(os.Stdin)
+	// for i := 0; i < t.NumField(); i++ {
+	// 	fmt.Printf("%+v\n", t.Field(i))
+	// 	createMessage(t.Field(i), p, t.Field(i).Name, *reader)
+	// }
+
+	typeEntered := createMessage(config.Type, p, "type", *reader)
+	scopeEntered := createMessage(config.Scope, p, "scope", *reader)
+	descriptionEntered := createMessage(config.Description, p, "description", *reader)
+	bodyEntered := createMessage(config.Body, p, "body", *reader)
+	footerEntered := createMessage(config.Footer, p, "footer", *reader)
+	fmt.Println(typeEntered, scopeEntered, descriptionEntered, bodyEntered, footerEntered)
 	subject := typeEntered + scopeEntered + ": " + descriptionEntered
 
-	if len(os.Args) < 2 {
-		fmt.Println("list or count subcommand is required")
-		os.Exit(1)
-	}
-
-	if *addAllFilesPtr {
-		//commitCommand.PrintDefaults()
+	if a {
 		cmd := exec.Command("git", "add", ".")
 		stdout, err := cmd.Output()
 
@@ -71,14 +96,13 @@ func main() {
 		}
 
 		fmt.Print(string(stdout))
-		//os.Exit(1)
 	}
 
-	otpt, err := createCommit(subject, bodyEntered, footerEntered)
+	stdout, err := createCommit(subject, bodyEntered, footerEntered)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	fmt.Println(string(otpt), "otpt")
+	fmt.Println(string(stdout))
 
 }

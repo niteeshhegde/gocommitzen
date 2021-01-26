@@ -6,85 +6,89 @@ import (
 )
 
 var defaultConfig = Config{
-	Type: struct {
-		MinLength   int      `json:"minLength"`
-		MaxLength   int      `json:"maxLength"`
-		AcceptExtra bool     `json:"acceptExtra"`
-		Values      []string `json:"values"`
-	}{
+	Type: Type{
 		MinLength:   1,
 		MaxLength:   5,
 		AcceptExtra: true,
+		Required:    false,
 		Values:      []string{"feat", "fix"},
 	},
-	Scope: struct {
-		MinLength   int      `json:"minLength"`
-		MaxLength   int      `json:"maxLength"`
-		AcceptExtra bool     `json:"acceptExtra"`
-		Values      []string `json:"values"`
-	}{
-		MinLength:   0,
+	Scope: Scope{
+		MinLength:   1,
 		MaxLength:   10,
-		AcceptExtra: false,
+		AcceptExtra: true,
+		Required:    true,
 		Values:      []string{},
 	},
-	Description: struct {
-		MinLength int `json:"minLength"`
-		MaxLength int `json:"maxLength"`
-	}{
+	Description: Description{
 		MinLength: 1,
 		MaxLength: 44,
+		Required:  true,
 	},
-	Subject: struct {
-		MinLength int `json:"minLength"`
-		MaxLength int `json:"maxLength"`
-	}{
+	Subject: Subject{
 		MinLength: 1,
 		MaxLength: 50,
+		Required:  true,
 	},
-	Body: struct {
-		Wrap int `json:"wrap"`
-	}{
-		Wrap: 72,
+	Body: Body{
+		Wrap:     72,
+		Required: true,
 	},
-	Footer: struct {
-		Wrap int `json:"wrap"`
-	}{
-		Wrap: 72,
+	Footer: Footer{
+		Wrap:     72,
+		Required: true,
 	},
 } //add from config
 
 type Config struct {
-	Type struct {
-		MinLength   int      `json:"minLength"`
-		MaxLength   int      `json:"maxLength"`
-		AcceptExtra bool     `json:"acceptExtra"`
-		Values      []string `json:"values"`
-	} `json:"type"`
-	Scope struct {
-		MinLength   int      `json:"minLength"`
-		MaxLength   int      `json:"maxLength"`
-		AcceptExtra bool     `json:"acceptExtra"`
-		Values      []string `json:"values"`
-	} `json:"scope"`
-	Description struct {
-		MinLength int `json:"minLength"`
-		MaxLength int `json:"maxLength"`
-	} `json:"description"`
-	Subject struct {
-		MinLength int `json:"minLength"`
-		MaxLength int `json:"maxLength"`
-	} `json:"subject"`
-	Body struct {
-		Wrap int `json:"wrap"`
-	} `json:"body"`
-	Footer struct {
-		Wrap int `json:"wrap"`
-	} `json:"footer"`
+	Type        Type        `json:"type"`
+	Scope       Scope       `json:"scope"`
+	Description Description `json:"description"`
+	Subject     Subject     `json:"subject"`
+	Body        Body        `json:"body"`
+	Footer      Footer      `json:"footer"`
+}
+
+type Type struct {
+	MinLength   int      `json:"minLength"`
+	MaxLength   int      `json:"maxLength"`
+	AcceptExtra bool     `json:"acceptExtra"`
+	Required    bool     `json:"required"`
+	Values      []string `json:"values"`
+}
+
+// Scope fs
+type Scope struct {
+	MinLength   int      `json:"minLength"`
+	MaxLength   int      `json:"maxLength"`
+	AcceptExtra bool     `json:"acceptExtra"`
+	Required    bool     `json:"required"`
+	Values      []string `json:"values"`
+}
+
+type Description struct {
+	MinLength int  `json:"minLength"`
+	MaxLength int  `json:"maxLength"`
+	Required  bool `json:"required"`
+}
+
+type Subject struct {
+	MinLength int  `json:"minLength"`
+	MaxLength int  `json:"maxLength"`
+	Required  bool `json:"required"`
+}
+
+type Body struct {
+	Wrap     int  `json:"wrap"`
+	Required bool `json:"required"`
+}
+
+type Footer struct {
+	Wrap     int  `json:"wrap"`
+	Required bool `json:"required"`
 }
 
 func newConfig(path string) (Config, error) {
-
 	var cng Config
 	if len(path) > 0 {
 		file, err := os.Open(path)
