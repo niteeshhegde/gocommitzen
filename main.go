@@ -6,7 +6,16 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
+
+var messages2 = map[string]string{
+	"type":        "Commits MUST be prefixed with a type, which consists of a noun, feat, fix, etc.",
+	"scope":       "An optional scope MAY be provided after a type. A scope is a phrase describing a section of the codebase.",
+	"description": "A description MUST immediately follow the type/scope prefix. The description is a short description of the changes",
+	"body":        "A longer commit body MAY be provided after the short description.",
+	"footer":      "A footer MAY be provided one blank line after the body. The footer SHOULD contain additional meta-information about the changes(such as the issues it fixes, e.g., fixes #13, #5).",
+}
 
 var extraKeyName string = "personalized"
 var skipKeyName string = "skip"
@@ -48,12 +57,8 @@ func main() {
 	flag.BoolVar(&a, "a", false, "Boolean value refering to stage all files")
 	flag.BoolVar(&p, "p", false, "Boolean value allowing you to add custom type and scope skipping choises")
 	flag.StringVar(&c, "c", "", "String value refering to path of the config file for conventional commits")
-
+	flag.Usage = usage
 	flag.Parse()
-	if flag.Parsed() == false {
-		usage()
-		os.Exit(1)
-	}
 	if c == "" {
 		currentDir, err := os.Getwd()
 		if err != nil {
@@ -70,15 +75,15 @@ func main() {
 		return
 	}
 	reader := bufio.NewReader(os.Stdin)
-	//handle err
+	// handle err
 	// t := reflect.TypeOf(config)
 	// reader := bufio.NewReader(os.Stdin)
 	// for i := 0; i < t.NumField(); i++ {
 	// 	fmt.Printf("%+v\n", t.Field(i))
 	// 	createMessage(t.Field(i), p, t.Field(i).Name, *reader)
 	// }
-
 	typeEntered := createMessage(config.Type, p, "type", *reader)
+
 	scopeEntered := createMessage(config.Scope, p, "scope", *reader)
 	descriptionEntered := createMessage(config.Description, p, "description", *reader)
 	bodyEntered := createMessage(config.Body, p, "body", *reader)
@@ -105,4 +110,18 @@ func main() {
 	}
 	fmt.Println(string(stdout))
 
+}
+
+func readProperty(r *bufio.Reader, fn func(s string) error) {
+
+	text, err := r.ReadString('\n')
+	if err != nil {
+		printError(fmt.Sprintf("could not read from stdin %v\n", err))
+		os.Exit(1)
+	}
+
+	if err := fn(strings.TrimRight(text, "\n")); err != nil {
+		printError(fmt.Sprintf("%v\n", err))
+		os.Exit(1)
+	}
 }

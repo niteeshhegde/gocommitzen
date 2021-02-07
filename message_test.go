@@ -3,83 +3,67 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
-	"os"
+	"reflect"
 	"strconv"
 	"strings"
-
-	wordwrap "github.com/mitchellh/go-wordwrap"
 )
 
-var messages = map[string]string{
+var messages2 = map[string]string{
 	"type":        "Commits MUST be prefixed with a type, which consists of a noun, feat, fix, etc.",
 	"scope":       "An optional scope MAY be provided after a type. A scope is a phrase describing a section of the codebase.",
 	"description": "A description MUST immediately follow the type/scope prefix. The description is a short description of the changes",
 	"body":        "A longer commit body MAY be provided after the short description.",
 	"footer":      "A footer MAY be provided one blank line after the body. The footer SHOULD contain additional meta-information about the changes(such as the issues it fixes, e.g., fixes #13, #5).",
 }
+var config Congif
+if c != "" {
+// ...
+c, err := newConfig
+// ....
+}
 
-func createMessage(cnf interface{}, personalized bool, name string, reader bufio.Reader) string {
+func createMessage2(config interface{}, personalized bool, name string, reader &bufio.Reader) string {
 	var values []string
 	var valueInput string
-	var minLength, maxLength, wrap int
-	var required, acceptExtra bool
-	switch cnf.(type) {
+	var acceptExtra, required bool
+	var minLength, maxLength int
 
-	case Type:
-		minLength = cnf.(Type).MinLength
-		maxLength = cnf.(Type).MaxLength
-		values = cnf.(Type).Values
-		acceptExtra = cnf.(Type).AcceptExtra
-		required = cnf.(Type).Required
-
-	case Scope:
-		minLength = cnf.(Scope).MinLength
-		maxLength = cnf.(Scope).MaxLength
-		values = cnf.(Scope).Values
-		acceptExtra = cnf.(Scope).AcceptExtra
-		required = cnf.(Scope).Required
-
-	case Description:
-		minLength = cnf.(Description).MinLength
-		maxLength = cnf.(Description).MaxLength
-		required = cnf.(Description).Required
-
-	case Body:
-		wrap = cnf.(Body).Wrap
-		required = cnf.(Body).Required
-
-	case Footer:
-		wrap = cnf.(Footer).Wrap
-		required = cnf.(Footer).Required
-
-	default:
-		panic("whatever 'i' is, it is not a Dog or Cat")
-	}
 	printHeader(fmt.Sprintf("\n-------%s-------", strings.ToUpper(name)))
 	printDescrition(messages[name])
 
-	if (minLength > 0) && (maxLength > 0) {
+	v := reflect.ValueOf(config)
+	if v.FieldByName("MinLength").IsValid() && v.FieldByName("MaxLength").IsValid() {
+		minLength = int(v.FieldByName("MinLength").Int())
+		maxLength = int(v.FieldByName("MaxLength").Int())
 		printDescrition(fmt.Sprintf("Length of this field must be between %d and %d", minLength, maxLength))
-	} else if maxLength > 0 {
-		printDescrition(fmt.Sprintf("Maximum length of this field must be %d", maxLength))
-	} else if minLength > 0 {
+	} else if v.FieldByName("MaxLength").IsValid() {
+		minLength = int(v.FieldByName("MinLength").Int())
 		printDescrition(fmt.Sprintf("Minimum length of this field must be %d", minLength))
-		maxLength = math.MaxInt32
-	} else {
-		maxLength = math.MaxInt32
+	} else if v.FieldByName("MaxLength").IsValid() {
+		maxLength = int(v.FieldByName("MaxLength").Int())
+		printDescrition(fmt.Sprintf("Maximum length of this field must be %d", maxLength))
+	} else if v.FieldByName("Wrap").IsValid() {
+		maxLength = int(v.FieldByName("Wrap").Int())
+		minLength = 1
+		printDescrition(fmt.Sprintf("Maximum length of this field must be %d", maxLength))
 	}
-	fmt.Println(maxLength)
 
-	if required {
+	if v.FieldByName("AcceptExtra").IsValid() && v.FieldByName("AcceptExtra").Bool() == true {
+		acceptExtra = true
+	}
+
+	if v.FieldByName("Required").IsValid() && v.FieldByName("Required").Bool() == true {
 		printDescrition("This field is Required")
+		required = true
 	} else {
 		printDescrition("This field is Optional")
 	}
 
-	if len(values) > 0 && !personalized {
+	if v.FieldByName("Values").IsValid() && v.FieldByName("Values").Len() > 0 && !personalized {
 
-		if acceptExtra {
+		values = v.FieldByName("Values").Interface().([]string)
+
+		if v.FieldByName("AcceptExtra").IsValid() && v.FieldByName("AcceptExtra").Bool() == true {
 			values = append(values, extraKeyName)
 		}
 
@@ -92,8 +76,12 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 			for index, element := range values {
 				printInput(fmt.Sprintf("%d - %s", index, element))
 			}
+			input, _, err := reader.ReadLine()
+			if err != nil {
+				panic(err)
+			}
 
-			idx, err := strconv.Atoi(readInput(&reader, wrap))
+			idx, err := strconv.Atoi(string(input))
 			if int(idx) < len(values) && idx >= 0 && err == nil {
 				valueInput = values[idx]
 				if valueInput == skipKeyName {
@@ -108,17 +96,24 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 
 	}
 
-	if (len(values) == 0 || acceptExtra) && (valueInput == extraKeyName || valueInput == "") {
+	if (!v.FieldByName("Values").IsValid() || acceptExtra) && (valueInput == extraKeyName || valueInput == "") {
 		printInput(fmt.Sprintf("Enter commit's %s:", name))
-
-		valueInput = readInput(&reader, wrap)
+		line, _, err := reader.ReadLine()
+		if err != nil {
+			panic(err)
+		}
+		valueInput = string(line)
 		if !required && (valueInput == "") {
 			printSkipping(fmt.Sprintf("Skipping %s as no values entered!", name))
 			return ""
 		}
 		for len(valueInput) > maxLength || len(valueInput) < minLength {
 			printError(fmt.Sprintf("Input Length must be between %d and %d characters. Please enter again", minLength, maxLength))
-			valueInput = readInput(&reader, wrap)
+			line, _, err := reader.ReadLine()
+			if err != nil {
+				panic(err)
+			}
+			valueInput = string(line)
 			if !required && (valueInput == "") {
 				printSkipping(fmt.Sprintf("Skipping %s as no values entered!", name))
 				return ""
@@ -127,20 +122,4 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 	}
 
 	return valueInput
-}
-
-func readInput(r *bufio.Reader, wrap int) string {
-
-	text, err := r.ReadString('\n')
-	if err != nil {
-		printError(fmt.Sprintf("could not read from stdin %v\n", err))
-		os.Exit(1)
-	}
-
-	if wrap > 0 {
-		return wordwrap.WrapString(text, uint(wrap))
-	}
-
-	return strings.TrimSuffix(text, "\n")
-
 }

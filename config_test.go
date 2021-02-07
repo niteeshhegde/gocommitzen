@@ -41,13 +41,15 @@ var fileConfig = Config{
 }
 
 func TestNewConfig(t *testing.T) {
-	config, err := newConfig("")
-	if !reflect.DeepEqual(config, defaultConfig) {
-		t.Errorf("Default Config was not created properly.\n Expected ---> %v, \n Recieved ---> %v", defaultConfig, config)
-	}
-	if err != nil {
-		t.Errorf("Error while creating Default Config %s", err)
-	}
+	t.Run("def cnfig", func(t *testing.T) {
+		config, err := newConfig("")
+		if !reflect.DeepEqual(config, defaultConfig) {
+			t.Errorf("Default Config was not created properly.\n Expected ---> %v, \n Recieved ---> %v", defaultConfig, config)
+		}
+		if err != nil {
+			t.Errorf("Error while creating Default Config %s", err)
+		}
+	})
 
 	config, err = newConfig("commit.json")
 	if !reflect.DeepEqual(config, fileConfig) {
