@@ -16,7 +16,7 @@ var messages = map[string]string{
 	"scope":       "Enter the scope of this change. A scope is a phrase describing a section of the codebase.",
 	"description": "Enter a short, imperative tense description of the change",
 	"body":        "Enter a longer description of the change,",
-	"footer":      "Enter any breaking change description, closed issue, etc by explicitly stating them. Eg -\"BREAING-CHANGE: #CH44480\", \"ISSUE: #IS2585\"",
+	"footer":      "Enter any breaking change description, closed issue, etc by explicitly stating them. Eg -\"BREAKING-CHANGE: #CH44480\", \"ISSUE: #IS2585\"",
 }
 
 func createMessage(cnf interface{}, personalized bool, name string, reader bufio.Reader) string {
