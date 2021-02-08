@@ -12,11 +12,11 @@ import (
 )
 
 var messages = map[string]string{
-	"type":        "Commits MUST be prefixed with a type, which consists of a noun, feat, fix, etc.",
-	"scope":       "An optional scope MAY be provided after a type. A scope is a phrase describing a section of the codebase.",
-	"description": "A description MUST immediately follow the type/scope prefix. The description is a short description of the changes",
-	"body":        "A longer commit body MAY be provided after the short description.",
-	"footer":      "A footer MAY be provided one blank line after the body. The footer SHOULD contain additional meta-information about the changes(such as the issues it fixes, e.g., fixes #13, #5).",
+	"type":        "Enter the type of change that you're committing, which consists of a noun, feat, fix, etc.",
+	"scope":       "Enter the scope of this change. A scope is a phrase describing a section of the codebase.",
+	"description": "Enter a short, imperative tense description of the change",
+	"body":        "Enter a longer description of the change,",
+	"footer":      "Enter any breaking change description, closed issue, etc by explicitly stating them",
 }
 
 func createMessage(cnf interface{}, personalized bool, name string, reader bufio.Reader) string {
@@ -52,10 +52,8 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 	case Footer:
 		wrap = cnf.(Footer).Wrap
 		required = cnf.(Footer).Required
-
-	default:
-		panic("whatever 'i' is, it is not a Dog or Cat")
 	}
+
 	printHeader(fmt.Sprintf("\n-------%s-------", strings.ToUpper(name)))
 	printDescrition(messages[name])
 
