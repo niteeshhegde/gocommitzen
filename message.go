@@ -16,13 +16,14 @@ var messages = map[string]string{
 	"scope":       "Enter the scope of this change. A scope is a phrase describing a section of the codebase.",
 	"description": "Enter a short, imperative tense description of the change",
 	"body":        "Enter a longer description of the change,",
-	"footer":      "Enter any breaking change description, closed issue, etc by explicitly stating them. Eg -\"BREAKING-CHANGE: #CH44480\", \"ISSUE: #IS2585\"",
+	"footer":      "Enter any closed issue, feature reference etc by explicitly stating them. Eg -\"FEATURE: #CH44480\", \"ISSUE: #IS2585\"",
 }
 
 func createMessage(cnf interface{}, personalized bool, name string, reader bufio.Reader) string {
 	var values []string
 	var valueInput string
-	var minLength, maxLength, wrap int
+	var minLength, wrap int
+	var maxLength int = math.MaxInt32
 	var required, acceptExtra bool
 	switch cnf.(type) {
 
@@ -57,17 +58,13 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 	printHeader(fmt.Sprintf("\n-------%s-------", strings.ToUpper(name)))
 	printDescrition(messages[name])
 
-	if (minLength > 0) && (maxLength > 0) {
+	if (minLength > 0) && (maxLength != math.MaxInt32) {
 		printDescrition(fmt.Sprintf("Length of this field must be between %d and %d", minLength, maxLength))
-	} else if maxLength > 0 {
+	} else if maxLength != math.MaxInt32 {
 		printDescrition(fmt.Sprintf("Maximum length of this field must be %d", maxLength))
 	} else if minLength > 0 {
 		printDescrition(fmt.Sprintf("Minimum length of this field must be %d", minLength))
-		maxLength = math.MaxInt32
-	} else {
-		maxLength = math.MaxInt32
 	}
-	fmt.Println(maxLength)
 
 	if required {
 		printDescrition("This field is Required")
@@ -107,8 +104,6 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 	}
 
 	if (len(values) == 0 || acceptExtra) && (valueInput == extraKeyName || valueInput == "") {
-		printInput(fmt.Sprintf("Enter commit's %s:", name))
-
 		valueInput = readInput(&reader, wrap)
 		if !required && (valueInput == "") {
 			printSkipping(fmt.Sprintf("Skipping %s as no values entered!", name))

@@ -6,29 +6,32 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 )
-
-var messages2 = map[string]string{
-	"type":        "Commits MUST be prefixed with a type, which consists of a noun, feat, fix, etc.",
-	"scope":       "An optional scope MAY be provided after a type. A scope is a phrase describing a section of the codebase.",
-	"description": "A description MUST immediately follow the type/scope prefix. The description is a short description of the changes",
-	"body":        "A longer commit body MAY be provided after the short description.",
-	"footer":      "A footer MAY be provided one blank line after the body. The footer SHOULD contain additional meta-information about the changes(such as the issues it fixes, e.g., fixes #13, #5).",
-}
 
 var extraKeyName string = "personalized"
 var skipKeyName string = "skip"
 
-func createCommit(subject string, body string, footer string) ([]byte, error) {
+func createCommit(subject string, body string, footer string) {
 	cmd := exec.Command("git", "commit", "-m", subject, "-m", body, "-m", footer)
 	stdout, err := cmd.Output()
 
 	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+		printError(fmt.Sprintf("%s", err))
+		os.Exit(1)
 	}
 
-	return stdout, nil
+	fmt.Println(string(stdout))
+}
+
+func addFiles() {
+	cmd := exec.Command("git", "add", ".")
+	stdout, err := cmd.Output()
+
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	fmt.Println(string(stdout))
 }
 
 func usage() {
@@ -52,7 +55,7 @@ func fileExists(name string) bool {
 
 func main() {
 	var a, p bool
-	var c string
+	var c, prefix string
 
 	flag.BoolVar(&a, "a", false, "Boolean value refering to stage all files")
 	flag.BoolVar(&p, "p", false, "Boolean value allowing you to add custom type and scope skipping choises")
@@ -75,53 +78,31 @@ func main() {
 		return
 	}
 	reader := bufio.NewReader(os.Stdin)
-	// handle err
-	// t := reflect.TypeOf(config)
-	// reader := bufio.NewReader(os.Stdin)
-	// for i := 0; i < t.NumField(); i++ {
-	// 	fmt.Printf("%+v\n", t.Field(i))
-	// 	createMessage(t.Field(i), p, t.Field(i).Name, *reader)
-	// }
-	typeEntered := createMessage(config.Type, p, "type", *reader)
 
+	typeEntered := createMessage(config.Type, p, "type", *reader)
 	scopeEntered := createMessage(config.Scope, p, "scope", *reader)
+	if scopeEntered != "" {
+		scopeEntered = fmt.Sprintf("(%s)", scopeEntered)
+	}
 	descriptionEntered := createMessage(config.Description, p, "description", *reader)
 	bodyEntered := createMessage(config.Body, p, "body", *reader)
 	footerEntered := createMessage(config.Footer, p, "footer", *reader)
-	fmt.Println(typeEntered, scopeEntered, descriptionEntered, bodyEntered, footerEntered)
-	subject := typeEntered + scopeEntered + ": " + descriptionEntered
+
+	printDescrition("Enter any breaking change description, press enter to skip")
+	if s := readInput(reader, 0); s != "" {
+		breakingChange := fmt.Sprintf("%s%s", "BREAKING CHANGE: ", s)
+		footerEntered = fmt.Sprintf("%s\n%s", breakingChange, footerEntered)
+		prefix = "!"
+	}
+
+	subject := typeEntered + scopeEntered + prefix + ": " + descriptionEntered
+	fmt.Println(subject)
+	fmt.Println(bodyEntered)
+	fmt.Println(footerEntered)
 
 	if a {
-		cmd := exec.Command("git", "add", ".")
-		stdout, err := cmd.Output()
-
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		fmt.Print(string(stdout))
+		addFiles()
 	}
+	createCommit(subject, bodyEntered, footerEntered)
 
-	stdout, err := createCommit(subject, bodyEntered, footerEntered)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	fmt.Println(string(stdout))
-
-}
-
-func readProperty(r *bufio.Reader, fn func(s string) error) {
-
-	text, err := r.ReadString('\n')
-	if err != nil {
-		printError(fmt.Sprintf("could not read from stdin %v\n", err))
-		os.Exit(1)
-	}
-
-	if err := fn(strings.TrimRight(text, "\n")); err != nil {
-		printError(fmt.Sprintf("%v\n", err))
-		os.Exit(1)
-	}
 }
