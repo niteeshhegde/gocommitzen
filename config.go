@@ -31,11 +31,11 @@ var defaultConfig = Config{
 		Required:  true,
 	},
 	Body: Body{
-		Wrap:     72,
+		Wrap:     2,
 		Required: true,
 	},
 	Footer: Footer{
-		Wrap:     72,
+		Wrap:     2,
 		Required: true,
 	},
 } //add from config

@@ -7,8 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	wordwrap "github.com/mitchellh/go-wordwrap"
 )
 
 var messages = map[string]string{
@@ -17,6 +15,42 @@ var messages = map[string]string{
 	"description": "Enter a short, imperative tense description of the change",
 	"body":        "Enter a longer description of the change,",
 	"footer":      "Enter any closed issue, feature reference etc by explicitly stating them. Eg -\"FEATURE: #CH44480\", \"ISSUE: #IS2585\"",
+}
+
+func wordWrap(text string, lineWidth int) (wrapped string) {
+	words := strings.Fields(strings.TrimSpace(text))
+	fmt.Println(words)
+	if len(words) == 0 || lineWidth <= 0 {
+		return text
+	}
+	wrapped = words[0]
+	spaceLeft := lineWidth - len(wrapped)
+	for _, word := range words[1:] {
+		if len(word)+1 > spaceLeft {
+			wrapped += "\n" + word
+			spaceLeft = lineWidth - len(word)
+		} else {
+			wrapped += " " + word
+			spaceLeft -= 1 + len(word)
+		}
+	}
+	return
+}
+
+func readInput(r *bufio.Reader, wrap int) string {
+
+	text, err := r.ReadString('\n')
+	if err != nil {
+		printError(fmt.Sprintf("could not read from stdin %v\n", err))
+		os.Exit(1)
+	}
+
+	if wrap > 0 {
+		return strings.TrimSuffix(wordWrap(text, wrap), "\n")
+	}
+
+	return strings.TrimSuffix(text, "\n")
+
 }
 
 func createMessage(cnf interface{}, personalized bool, name string, reader bufio.Reader) string {
@@ -120,20 +154,4 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 	}
 
 	return valueInput
-}
-
-func readInput(r *bufio.Reader, wrap int) string {
-
-	text, err := r.ReadString('\n')
-	if err != nil {
-		printError(fmt.Sprintf("could not read from stdin %v\n", err))
-		os.Exit(1)
-	}
-
-	if wrap > 0 {
-		return wordwrap.WrapString(text, uint(wrap))
-	}
-
-	return strings.TrimSuffix(text, "\n")
-
 }
