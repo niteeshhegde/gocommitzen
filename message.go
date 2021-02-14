@@ -124,6 +124,7 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 
 			idx, err := strconv.Atoi(readInput(&reader, wrap))
 			if int(idx) < len(values) && idx >= 0 && err == nil {
+				fmt.Println(idx, values[idx])
 				valueInput = values[idx]
 				if valueInput == skipKeyName {
 					printSkipping(fmt.Sprintf("Skipping %s as no values entered!", name))

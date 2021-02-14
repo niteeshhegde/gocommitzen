@@ -56,3 +56,38 @@ func TestWordwrap(t *testing.T) {
 		assertEqual(t, result, "commitzen commitzen\ncommitzen commitzen", "FAILED - ReadInput() doesnt return expected results")
 	})
 }
+
+func TestCreateMessage(t *testing.T) {
+	t.Run("Test Create Type - fix", func(t *testing.T) {
+		var stdin bytes.Buffer
+		stdin.Write([]byte("1\n"))
+		reader := bufio.NewReader(&stdin)
+		result := createMessage(defaultConfig.Type, false, "type", *reader)
+		assertEqual(t, result, "fix", "FAILED - CreateMessage() doesnt return expected results")
+	})
+
+	t.Run("Test Create Type - feat", func(t *testing.T) {
+		var stdin bytes.Buffer
+		stdin.Write([]byte("0\n"))
+		reader := bufio.NewReader(&stdin)
+		result := createMessage(defaultConfig.Type, false, "type", *reader)
+		assertEqual(t, result, "feat", "FAILED - CreateMessage() doesnt return expected results")
+	})
+
+	t.Run("Test Create Type - personalized", func(t *testing.T) {
+		var stdin bytes.Buffer
+		stdin.Write([]byte("2\n"))
+		stdin.Write([]byte("test\n"))
+		reader := bufio.NewReader(&stdin)
+		result := createMessage(defaultConfig.Type, false, "type", *reader)
+		assertEqual(t, result, "test", "FAILED - CreateMessage() doesnt return expected results")
+	})
+
+	t.Run("Test Create Type - skip", func(t *testing.T) {
+		var stdin bytes.Buffer
+		stdin.Write([]byte("3\n"))
+		reader := bufio.NewReader(&stdin)
+		result := createMessage(defaultConfig.Type, false, "type", *reader)
+		assertEqual(t, result, "", "FAILED - CreateMessage() doesnt return expected results")
+	})
+}
