@@ -10,17 +10,18 @@ var colorBlue string = "\033[34m"
 var colorPurple string = "\033[35m"
 var colorCyan string = "\033[36m"
 var colorWhite string = "\033[37m"
+var Gray string = "\033[97m"
 
 func printHeader(str string) {
-	fmt.Println(string(colorPurple), str, string(colorReset))
-}
-
-func printDescrition(str string) {
 	fmt.Println(string(colorCyan), str, string(colorReset))
 }
 
-func printInput(str string) {
+func printDescrition(str string) {
 	fmt.Println(string(colorGreen), str, string(colorReset))
+}
+
+func printInput(str string) {
+	fmt.Println(string(colorPurple), str, string(colorReset))
 }
 
 func printError(str string) {

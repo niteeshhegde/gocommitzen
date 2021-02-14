@@ -59,17 +59,17 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 	printDescrition(messages[name])
 
 	if (minLength > 0) && (maxLength != math.MaxInt32) {
-		printDescrition(fmt.Sprintf("Length of this field must be between %d and %d", minLength, maxLength))
+		printDescrition(fmt.Sprintf(" - Length of %s must be between %d and %d", name, minLength, maxLength))
 	} else if maxLength != math.MaxInt32 {
-		printDescrition(fmt.Sprintf("Maximum length of this field must be %d", maxLength))
+		printDescrition(fmt.Sprintf(" - Maximum length of %s must be %d", name, maxLength))
 	} else if minLength > 0 {
-		printDescrition(fmt.Sprintf("Minimum length of this field must be %d", minLength))
+		printDescrition(fmt.Sprintf(" - Minimum length of %s must be %d", name, minLength))
 	}
 
 	if required {
-		printDescrition("This field is Required")
+		printDescrition(" - This field is Required")
 	} else {
-		printDescrition("This field is Optional")
+		printDescrition(" - This field is Optional")
 	}
 
 	if len(values) > 0 && !personalized {
@@ -85,7 +85,7 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 		for valueInput == "" {
 			printInput(fmt.Sprintf("Select commit's %s from the below -", name))
 			for index, element := range values {
-				printInput(fmt.Sprintf("%d - %s", index, element))
+				printInput(fmt.Sprintf(" %d -> %s", index, element))
 			}
 
 			idx, err := strconv.Atoi(readInput(&reader, wrap))

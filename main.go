@@ -35,12 +35,11 @@ func addFiles() {
 }
 
 func usage() {
-	fmt.Println("Description: gocommitzen provides an interface for using conventional commits for your code")
-	printHeader(" 1. commit")
-	fmt.Println("  This command asks for all components of the conventional commit and commits the code.")
-	printInput(" Usage:")
-	printSkipping(" gocommitzen commit -a -p -c 'home/user/config.json'")
-	printInput(" Args:")
+	printHeader("Description:")
+	fmt.Println("\t commitzen provides an interface for using conventional commits for your code.")
+	printHeader("Usage:")
+	fmt.Println("\t commitzen -a -p -c 'home/user/config.json'")
+	printHeader("Args:")
 	flag.PrintDefaults()
 }
 
