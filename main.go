@@ -95,9 +95,6 @@ func main() {
 	}
 
 	subject := typeEntered + scopeEntered + prefix + ": " + descriptionEntered
-	fmt.Println(subject)
-	fmt.Println(bodyEntered)
-	fmt.Println(footerEntered)
 
 	if a {
 		addFiles()
