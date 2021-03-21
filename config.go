@@ -8,16 +8,16 @@ import (
 var defaultConfig = Config{
 	Type: Type{
 		MinLength:   1,
-		MaxLength:   5,
+		MaxLength:   10,
 		AcceptExtra: true,
-		Required:    false,
+		Required:    true,
 		Values:      []string{"feat", "fix"},
 	},
 	Scope: Scope{
 		MinLength:   1,
 		MaxLength:   10,
 		AcceptExtra: true,
-		Required:    true,
+		Required:    false,
 		Values:      []string{},
 	},
 	Description: Description{
@@ -25,18 +25,13 @@ var defaultConfig = Config{
 		MaxLength: 44,
 		Required:  true,
 	},
-	Subject: Subject{
-		MinLength: 1,
-		MaxLength: 50,
-		Required:  true,
-	},
 	Body: Body{
 		Wrap:     72,
-		Required: true,
+		Required: false,
 	},
 	Footer: Footer{
 		Wrap:     72,
-		Required: true,
+		Required: false,
 	},
 } //add from config
 

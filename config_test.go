@@ -54,6 +54,9 @@ func arraysAreEqual(a, b []string) bool {
 func TestNewConfig(t *testing.T) {
 	t.Run("default config", func(t *testing.T) {
 		config, err := newConfig("")
+		if err != nil {
+			t.Fatalf("Error while creating Default Config %s", err)
+		}
 		if config.Type.AcceptExtra != defaultConfig.Type.AcceptExtra || config.Type.Required != defaultConfig.Type.Required || config.Type.MinLength != defaultConfig.Type.MinLength || config.Type.MaxLength != defaultConfig.Type.MaxLength || !arraysAreEqual(config.Type.Values, defaultConfig.Type.Values) {
 			t.Errorf("Default Config Type was not created properly.\n Expected ---> %v, \n Recieved ---> %v", defaultConfig, config)
 		}
@@ -62,9 +65,6 @@ func TestNewConfig(t *testing.T) {
 		}
 		if config.Description != defaultConfig.Description || config.Body != defaultConfig.Body || config.Footer != defaultConfig.Footer {
 			t.Errorf("Default Config was not created properly.\n Expected ---> %v, \n Recieved ---> %v", defaultConfig, config)
-		}
-		if err != nil {
-			t.Errorf("Error while creating Default Config %s", err)
 		}
 	})
 

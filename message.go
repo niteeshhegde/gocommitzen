@@ -19,7 +19,6 @@ var messages = map[string]string{
 
 func wordWrap(text string, lineWidth int) (wrapped string) {
 	words := strings.Fields(strings.TrimSpace(text))
-	fmt.Println(words)
 	if len(words) == 0 || lineWidth <= 0 {
 		return text
 	}
@@ -123,8 +122,7 @@ func createMessage(cnf interface{}, personalized bool, name string, reader bufio
 			}
 
 			idx, err := strconv.Atoi(readInput(&reader, wrap))
-			if int(idx) < len(values) && idx >= 0 && err == nil {
-				fmt.Println(idx, values[idx])
+			if idx < len(values) && idx >= 0 && err == nil {
 				valueInput = values[idx]
 				if valueInput == skipKeyName {
 					printSkipping(fmt.Sprintf("Skipping %s as no values entered!", name))

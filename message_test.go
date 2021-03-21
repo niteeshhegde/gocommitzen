@@ -7,6 +7,18 @@ import (
 	"testing"
 )
 
+var wordWraps = []struct {
+	word  string
+	wrap int
+	result string
+}{
+	{"commitzen commitzen", 0, "commitzen commitzen"},
+	{"commitzen commitzen", 5, "commitzen\ncommitzen"},
+	{"commitzen commitzen", 30, "commitzen commitzen"},
+	{"commitzen commitzen commitzen commitzen", 20, "commitzen commitzen\ncommitzen commitzen"},
+}
+
+
 func assertEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	if a == b {
 		return
@@ -36,25 +48,12 @@ func TestReadInput(t *testing.T) {
 }
 
 func TestWordwrap(t *testing.T) {
-	t.Run("With word wrap = 0", func(t *testing.T) {
-		result := wordWrap("commitzen commitzen", 0)
-		assertEqual(t, result, "commitzen commitzen", "FAILED - Wordwrap() doesnt return expected results")
-	})
-
-	t.Run("With word wrap > 0", func(t *testing.T) {
-		result := wordWrap("commitzen commitzen", 5)
-		assertEqual(t, result, "commitzen\ncommitzen", "FAILED - Wordwrap() doesnt return expected results")
-	})
-
-	t.Run("With word wrap < len(words)", func(t *testing.T) {
-		result := wordWrap("commitzen commitzen", 30)
-		assertEqual(t, result, "commitzen commitzen", "FAILED - Wordwrap() doesnt return expected results")
-	})
-
-	t.Run("With word wrap > len(words)", func(t *testing.T) {
-		result := wordWrap("commitzen commitzen commitzen commitzen", 20)
-		assertEqual(t, result, "commitzen commitzen\ncommitzen commitzen", "FAILED - Wordwrap() doesnt return expected results")
-	})
+	for _, wordWrap1 := range wordWraps {
+		t.Run(wordWrap1.word, func(t *testing.T) {
+			result := wordWrap(wordWrap1.word, wordWrap1.wrap)
+			assertEqual(t, result, wordWrap1.result, "FAILED - Wordwrap() doesnt return expected results")	
+		})
+	}
 }
 
 func TestCreateMessage(t *testing.T) {
@@ -83,13 +82,6 @@ func TestCreateMessage(t *testing.T) {
 		assertEqual(t, result, "test", "FAILED - CreateMessage() doesnt return expected results")
 	})
 
-	t.Run("Test Create Type - skip", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("3\n"))
-		reader := bufio.NewReader(&stdin)
-		result := createMessage(defaultConfig.Type, false, "type", *reader)
-		assertEqual(t, result, "", "FAILED - CreateMessage() doesnt return expected results")
-	})
 
 	t.Run("Test Create Scope - no input - required", func(t *testing.T) {
 		var stdin bytes.Buffer
