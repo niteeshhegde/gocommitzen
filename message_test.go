@@ -18,6 +18,16 @@ var wordWraps = []struct {
 	{"commitzen commitzen commitzen commitzen", 20, "commitzen commitzen\ncommitzen commitzen"},
 }
 
+var stdInupts = []struct {
+	word  string
+	wrap int
+	result string
+}{
+	{"commitzen\n", 0, "commitzen"},
+	{"commitzen commitzen commitzen\n", 20, "commitzen commitzen\ncommitzen"},
+}
+
+
 
 func assertEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	if a == b {
@@ -26,29 +36,24 @@ func assertEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	if len(message) == 0 {
 		message = fmt.Sprintf("%v != %v", a, b)
 	}
-	t.Fatal(message)
+	t.Fatal(message,a,b)
 }
 
 func TestReadInput(t *testing.T) {
-	t.Run("Test ReadInput method without wrap", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("commitzen\n"))
-		reader := bufio.NewReader(&stdin)
-		result := readInput(reader, 0)
-		assertEqual(t, result, "commitzen", "FAILED - ReadInput() doesnt return expected results")
-	})
-
-	t.Run("Test ReadInput method with wrap", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("commitzen commitzen commitzen\n"))
-		reader := bufio.NewReader(&stdin)
-		result := readInput(reader, 20)
-		assertEqual(t, result, "commitzen commitzen\ncommitzen", "FAILED - ReadInput() doesnt return expected results")
-	})
+	for _, stdInupt := range stdInupts {
+		t.Run(stdInupt.word, func(t *testing.T) {
+			var stdin bytes.Buffer
+			stdin.Write([]byte(stdInupt.word))
+			reader := bufio.NewReader(&stdin)
+			result := readInput(reader, stdInupt.wrap)
+			assertEqual(t, result, stdInupt.result, "FAILED - ReadInput() doesnt return expected results")	
+		})
+	}
 }
 
 func TestWordwrap(t *testing.T) {
 	for _, wordWrap1 := range wordWraps {
+		
 		t.Run(wordWrap1.word, func(t *testing.T) {
 			result := wordWrap(wordWrap1.word, wordWrap1.wrap)
 			assertEqual(t, result, wordWrap1.result, "FAILED - Wordwrap() doesnt return expected results")	
@@ -56,32 +61,43 @@ func TestWordwrap(t *testing.T) {
 	}
 }
 
+
 func TestCreateMessage(t *testing.T) {
-	t.Run("Test Create Type - fix", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("1\n"))
-		reader := bufio.NewReader(&stdin)
-		result := createMessage(defaultConfig.Type, false, "type", *reader)
-		assertEqual(t, result, "fix", "FAILED - CreateMessage() doesnt return expected results")
-	})
-
-	t.Run("Test Create Type - feat", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("0\n"))
-		reader := bufio.NewReader(&stdin)
-		result := createMessage(defaultConfig.Type, false, "type", *reader)
-		assertEqual(t, result, "feat", "FAILED - CreateMessage() doesnt return expected results")
-	})
-
-	t.Run("Test Create Type - personalized", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("2\n"))
-		stdin.Write([]byte("test\n"))
-		reader := bufio.NewReader(&stdin)
-		result := createMessage(defaultConfig.Type, false, "type", *reader)
-		assertEqual(t, result, "test", "FAILED - CreateMessage() doesnt return expected results")
-	})
-
+	types := map[string]struct {
+		choise string
+		input  string
+		want  string
+	}{
+		"Test Create Type - fix": {
+			choise: "1\n",
+			input:  "",
+			want:  "fix",
+		},
+		"Test Create Type - feat": {
+			choise: "0\n",
+			input:  "",
+			want:  "feat",
+		},
+		"Test Create Type - personalized": {
+			choise: "2\n",
+			input:  "test\n",
+			want:  "test",
+		},
+	}
+	t.Parallel()
+	for name, type1 := range types {
+		type1 := type1
+		t.Run(name, func(t *testing.T) {
+			var stdin bytes.Buffer
+			stdin.Write([]byte(type1.choise))
+			reader := bufio.NewReader(&stdin)
+			if type1.input != "" {
+				stdin.Write([]byte("test\n"))
+			}
+			result := createMessage(defaultConfig.Type, false, "type", *reader)
+			assertEqual(t, result, type1.want, "FAILED - CreateMessage() doesnt return expected results")
+		})
+	}
 
 	t.Run("Test Create Scope - no input - required", func(t *testing.T) {
 		var stdin bytes.Buffer

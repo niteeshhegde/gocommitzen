@@ -72,11 +72,15 @@ func TestNewConfig(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			compareTypes(t, test.given.Type, test.want.Type)
-			if test.given.Scope.AcceptExtra != test.want.Scope.AcceptExtra || test.given.Scope.Required != test.want.Scope.Required || test.given.Scope.MinLength != test.want.Scope.MinLength || test.given.Scope.MaxLength != test.want.Scope.MaxLength || !arraysAreEqual(test.given.Scope.Values, test.want.Scope.Values) {
-				t.Errorf("Default Config Scope was not created properly.\n Expected ---> %v, \n Recieved ---> %v", test.want, test.given)
+			compareScopes(t, test.given.Scope, test.want.Scope)
+			if test.given.Description != test.want.Description  {
+				t.Errorf("Couldnot match description.\n Expected ---> %v, \n Recieved ---> %v", test.want.Description, test.given.Description)
 			}
-			if test.given.Description != test.want.Description || test.given.Body != test.want.Body || test.given.Footer != test.want.Footer {
-				t.Errorf("Default Config was not created properly.\n Expected ---> %v, \n Recieved ---> %v", test.want, test.given)
+			if test.given.Body != test.want.Body  {
+				t.Errorf("Couldnot match body.\n Expected ---> %v, \n Recieved ---> %v", test.want.Body, test.given.Body)
+			}
+			if test.given.Footer != test.want.Footer {
+				t.Errorf("Couldnot match footer.\n Expected ---> %v, \n Recieved ---> %v", test.want.Footer, test.given.Footer)
 			}
 		})
 	}
@@ -109,6 +113,28 @@ func compareTypes(t *testing.T, a, b Type) {
 		t.Errorf("could not match values: %#v, %#v", a.Values, b.Values)
 	}
 }
+
+
+func compareScopes(t *testing.T, a, b Scope) {
+	t.Helper()
+
+	if a.AcceptExtra != b.AcceptExtra {
+		t.Errorf("could not match accept extra: %#v, %#v", a.AcceptExtra, b.AcceptExtra)
+	}
+	if a.Required != b.Required {
+		t.Errorf("could not match required: %#v, %#v", a.Required, b.Required)
+	}
+	if a.MinLength != b.MinLength {
+		t.Errorf("could not match min length: %#v, %#v", a.MinLength, b.MinLength)
+	}
+	if a.MaxLength != b.MaxLength {
+		t.Errorf("could not match max length: %#v, %#v", a.MaxLength, b.MaxLength)
+	}
+	if fmt.Sprintf("%s", a.Values) != fmt.Sprintf("%s", b.Values) {
+		t.Errorf("could not match values: %#v, %#v", a.Values, b.Values)
+	}
+}
+
 
 func arraysAreEqual(a, b []string) bool {
 	if len(a) != len(b) {
