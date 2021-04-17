@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
+	"fmt"
+	"os"
 	"testing"
 )
 
-var fileConfig = Config{
+var wantFileConfig = Config{
 	Type: Type{
 		MinLength:   1,
 		MaxLength:   5,
@@ -39,6 +42,74 @@ var fileConfig = Config{
 	},
 }
 
+func TestNewConfig(t *testing.T) {
+	config, err := newConfig("")
+	if err != nil {
+		t.Fatalf("Error while creating Default Config %s", err)
+	}
+	givenFileConfig, err := newConfig("commit.json")
+	if err != nil {
+		t.Fatalf("Error while creating file Config %s", err)
+	}
+
+	tests := map[string]struct {
+		given Config
+		want  Config
+	}{
+		"default config": {
+			given: config,
+			want:  defaultConfig,
+		},
+		"file config": {
+			given: givenFileConfig,
+			want:  wantFileConfig,
+		},
+	}
+
+	t.Parallel()
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			compareTypes(t, test.given.Type, test.want.Type)
+			if test.given.Scope.AcceptExtra != test.want.Scope.AcceptExtra || test.given.Scope.Required != test.want.Scope.Required || test.given.Scope.MinLength != test.want.Scope.MinLength || test.given.Scope.MaxLength != test.want.Scope.MaxLength || !arraysAreEqual(test.given.Scope.Values, test.want.Scope.Values) {
+				t.Errorf("Default Config Scope was not created properly.\n Expected ---> %v, \n Recieved ---> %v", test.want, test.given)
+			}
+			if test.given.Description != test.want.Description || test.given.Body != test.want.Body || test.given.Footer != test.want.Footer {
+				t.Errorf("Default Config was not created properly.\n Expected ---> %v, \n Recieved ---> %v", test.want, test.given)
+			}
+		})
+	}
+
+	t.Run("wrong custom config", func(t *testing.T) {
+		_, err := newConfig("commit_test.json")
+		var wantErr *os.PathError
+		if !errors.As(err, &wantErr) || wantErr.Op != "open" || wantErr.Path != "commit_test.json" {
+			t.Errorf("Error while creating Config from file %s.\n Execting error open error", err)
+		}
+	})
+}
+
+func compareTypes(t *testing.T, a, b Type) {
+	t.Helper()
+
+	if a.AcceptExtra != b.AcceptExtra {
+		t.Errorf("could not match accept extra: %#v, %#v", a.AcceptExtra, b.AcceptExtra)
+	}
+	if a.Required != b.Required {
+		t.Errorf("could not match required: %#v, %#v", a.Required, b.Required)
+	}
+	if a.MinLength != b.MinLength {
+		t.Errorf("could not match min length: %#v, %#v", a.MinLength, b.MinLength)
+	}
+	if a.MaxLength != b.MaxLength {
+		t.Errorf("could not match max length: %#v, %#v", a.MaxLength, b.MaxLength)
+	}
+	if fmt.Sprintf("%s", a.Values) != fmt.Sprintf("%s", b.Values) {
+		t.Errorf("could not match values: %#v, %#v", a.Values, b.Values)
+	}
+}
+
 func arraysAreEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
@@ -49,46 +120,4 @@ func arraysAreEqual(a, b []string) bool {
 		}
 	}
 	return true
-}
-
-func TestNewConfig(t *testing.T) {
-	t.Run("default config", func(t *testing.T) {
-		config, err := newConfig("")
-		if err != nil {
-			t.Fatalf("Error while creating Default Config %s", err)
-		}
-		if config.Type.AcceptExtra != defaultConfig.Type.AcceptExtra || config.Type.Required != defaultConfig.Type.Required || config.Type.MinLength != defaultConfig.Type.MinLength || config.Type.MaxLength != defaultConfig.Type.MaxLength || !arraysAreEqual(config.Type.Values, defaultConfig.Type.Values) {
-			t.Errorf("Default Config Type was not created properly.\n Expected ---> %v, \n Recieved ---> %v", defaultConfig, config)
-		}
-		if config.Scope.AcceptExtra != defaultConfig.Scope.AcceptExtra || config.Scope.Required != defaultConfig.Scope.Required || config.Scope.MinLength != defaultConfig.Scope.MinLength || config.Scope.MaxLength != defaultConfig.Scope.MaxLength || !arraysAreEqual(config.Scope.Values, defaultConfig.Scope.Values) {
-			t.Errorf("Default Config Scope was not created properly.\n Expected ---> %v, \n Recieved ---> %v", defaultConfig, config)
-		}
-		if config.Description != defaultConfig.Description || config.Body != defaultConfig.Body || config.Footer != defaultConfig.Footer {
-			t.Errorf("Default Config was not created properly.\n Expected ---> %v, \n Recieved ---> %v", defaultConfig, config)
-		}
-	})
-
-	t.Run("custom config", func(t *testing.T) {
-		config, err := newConfig("commit.json")
-		if config.Type.AcceptExtra != fileConfig.Type.AcceptExtra || config.Type.Required != fileConfig.Type.Required || config.Type.MinLength != fileConfig.Type.MinLength || config.Type.MaxLength != fileConfig.Type.MaxLength || !arraysAreEqual(config.Type.Values, fileConfig.Type.Values) {
-			t.Errorf("File Config Type was not created properly.\n Expected ---> %v, \n Recieved ---> %v", fileConfig, config)
-		}
-		if config.Scope.AcceptExtra != fileConfig.Scope.AcceptExtra || config.Scope.Required != fileConfig.Scope.Required || config.Scope.MinLength != fileConfig.Scope.MinLength || config.Scope.MaxLength != fileConfig.Scope.MaxLength || !arraysAreEqual(config.Scope.Values, fileConfig.Scope.Values) {
-			t.Errorf("File Config Scope was not created properly.\n Expected ---> %v, \n Recieved ---> %v", fileConfig, config)
-		}
-		if config.Description != fileConfig.Description || config.Body != fileConfig.Body || config.Footer != fileConfig.Footer {
-			t.Errorf("File Config was not created properly.\n Expected ---> %v, \n Recieved ---> %v", fileConfig, config)
-		}
-		if err != nil {
-			t.Errorf("Error while creating Config from file %s", err)
-		}
-	})
-
-	t.Run("wrong custom config", func(t *testing.T) {
-		_, err := newConfig("commit_test.json")
-		expectedErr := "open commit_test.json: no such file or directory"
-		if err.Error() != expectedErr {
-			t.Errorf("Error while creating Config from file %s.\n Execting error %s", err, expectedErr)
-		}
-	})
 }
