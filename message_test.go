@@ -84,6 +84,63 @@ func TestCreateMessage(t *testing.T) {
 			want:  "test",
 		},
 	}
+
+	scopes := map[string]struct {
+		input  string
+		want  string
+	}{
+		"Test Create Scope - required": {
+			input:  "test scope\n",
+			want:  "test scope",
+		},
+		"Test Create Scope - empty": {
+			input:  "\n",
+			want:  "",
+		},
+	}
+
+	descriptions := map[string]struct {
+		input  string
+		want  string
+	}{
+		"Test Create description - 1": {
+			input:  "test description\n",
+			want:  "test description",
+		},
+		"Test Create description - 2": {
+			input:  "describe123\n",
+			want:  "describe123",
+		},
+	}
+
+	bodies := map[string]struct {
+		input  string
+		want  string
+	}{
+		"Test Create body - required": {
+			input:  "test body\n",
+			want:  "test body",
+		},
+		"Test Create body - empty": {
+			input:  "\n",
+			want:  "",
+		},
+	}
+
+	footers := map[string]struct {
+		input  string
+		want  string
+	}{
+		"Test Create footer - required": {
+			input:  "test footer test footer test footer\n",
+			want:  "test footer\ntest footer\ntest footer",
+		},
+		"Test Create footer - empty": {
+			input:  "\n",
+			want:  "",
+		},
+	}
+
 	t.Parallel()
 	for name, type1 := range types {
 		type1 := type1
@@ -92,70 +149,62 @@ func TestCreateMessage(t *testing.T) {
 			stdin.Write([]byte(type1.choise))
 			reader := bufio.NewReader(&stdin)
 			if type1.input != "" {
-				stdin.Write([]byte("test\n"))
+				stdin.Write([]byte(type1.input))
 			}
 			result := createMessage(defaultConfig.Type, false, "type", *reader)
-			assertEqual(t, result, type1.want, "FAILED - CreateMessage() doesnt return expected results")
+			assertEqual(t, result, type1.want, "FAILED - CreateMessage() doesnt return expected results for type")
 		})
 	}
 
-	t.Run("Test Create Scope - no input - required", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("test scope\n"))
-		reader := bufio.NewReader(&stdin)
-		result := createMessage(defaultConfig.Scope, false, "scope", *reader)
-		assertEqual(t, result, "test scope", "FAILED - CreateMessage() doesnt return expected results")
-	})
 
-	t.Run("Test Create description - required", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("test description\n"))
-		reader := bufio.NewReader(&stdin)
-		result := createMessage(defaultConfig.Description, false, "description", *reader)
-		assertEqual(t, result, "test description", "FAILED - CreateMessage() doesnt return expected results")
-	})
+	for name, scope := range scopes {
+		scope := scope
+		t.Run(name, func(t *testing.T) {
+			var stdin bytes.Buffer
+			reader := bufio.NewReader(&stdin)
+			stdin.Write([]byte(scope.input))
+			result := createMessage(defaultConfig.Scope, false, "scope", *reader)
+			assertEqual(t, result, scope.want, "FAILED - CreateMessage() doesnt return expected results for scope")
+		})
+	}
 
-	t.Run("Test Create body - required", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("test body\n"))
-		reader := bufio.NewReader(&stdin)
-		result := createMessage(defaultConfig.Body, false, "body", *reader)
-		assertEqual(t, result, "test body", "FAILED - CreateMessage() doesnt return expected results")
-	})
 
-	t.Run("Test Create body - not required", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("\n"))
-		reader := bufio.NewReader(&stdin)
-		body := Body{
-			Wrap:     15,
-			Required: false,
-		}
-		result := createMessage(body, false, "body", *reader)
-		assertEqual(t, result, "", "FAILED - CreateMessage() doesnt return expected results")
-	})
+	for name, description := range descriptions {
+		description := description
+		t.Run(name, func(t *testing.T) {
+			var stdin bytes.Buffer
+			reader := bufio.NewReader(&stdin)
+			stdin.Write([]byte(description.input))
+			result := createMessage(defaultConfig.Description, false, "description", *reader)
+			assertEqual(t, result, description.want, "FAILED - CreateMessage() doesnt return expected results for description")
+		})
+	}
 
-	t.Run("Test Create footer - no input - added", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("test footer test footer test footer\n"))
-		reader := bufio.NewReader(&stdin)
-		footer := Footer{
-			Wrap:     15,
-			Required: false,
-		}
-		result := createMessage(footer, false, "footer", *reader)
-		assertEqual(t, result, "test footer\ntest footer\ntest footer", "FAILED - CreateMessage() doesnt return expected results")
-	})
 
-	t.Run("Test Create footer - skipping", func(t *testing.T) {
-		var stdin bytes.Buffer
-		stdin.Write([]byte("\n"))
-		reader := bufio.NewReader(&stdin)
-		footer := Footer{
-			Wrap:     15,
-			Required: false,
-		}
-		result := createMessage(footer, false, "footer", *reader)
-		assertEqual(t, result, "", "FAILED - CreateMessage() doesnt return expected results")
-	})
+	for name, body := range bodies {
+		body := body
+		t.Run(name, func(t *testing.T) {
+			var stdin bytes.Buffer
+			reader := bufio.NewReader(&stdin)
+			stdin.Write([]byte(body.input))
+			result := createMessage(defaultConfig.Body, false, "body", *reader)
+			assertEqual(t, result, body.want, "FAILED - CreateMessage() doesnt return expected results for body")
+		})
+	}
+
+
+	for name, footer := range footers {
+		footer := footer
+		t.Run(name, func(t *testing.T) {
+			var stdin bytes.Buffer
+			reader := bufio.NewReader(&stdin)
+			stdin.Write([]byte(footer.input))
+			footer1 := Footer{
+				Wrap:     15,
+				Required: false,
+			}
+			result := createMessage(footer1, false, "footer", *reader)
+			assertEqual(t, result, footer.want, "FAILED - CreateMessage() doesnt return expected results for footer")
+		})
+	}
 }
