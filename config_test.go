@@ -73,10 +73,10 @@ func TestNewConfig(t *testing.T) {
 			t.Parallel()
 			compareTypes(t, test.given.Type, test.want.Type)
 			compareScopes(t, test.given.Scope, test.want.Scope)
-			if test.given.Description != test.want.Description  {
+			if test.given.Description != test.want.Description {
 				t.Errorf("Couldnot match description.\n Expected ---> %v, \n Recieved ---> %v", test.want.Description, test.given.Description)
 			}
-			if test.given.Body != test.want.Body  {
+			if test.given.Body != test.want.Body {
 				t.Errorf("Couldnot match body.\n Expected ---> %v, \n Recieved ---> %v", test.want.Body, test.given.Body)
 			}
 			if test.given.Footer != test.want.Footer {
@@ -114,7 +114,6 @@ func compareTypes(t *testing.T, a, b Type) {
 	}
 }
 
-
 func compareScopes(t *testing.T, a, b Scope) {
 	t.Helper()
 
@@ -135,7 +134,6 @@ func compareScopes(t *testing.T, a, b Scope) {
 	}
 }
 
-
 func arraysAreEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
@@ -146,4 +144,18 @@ func arraysAreEqual(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+func BenchmarkConfig(b *testing.B) {
+	os.Stdout, _ = os.Open(os.DevNull)
+	b.Run("Empty Config", func(b *testing.B) {
+		for i := 0; i <= b.N; i++ {
+			newConfig("")
+		}
+	})
+	b.Run("Valid Config", func(b *testing.B) {
+		for i := 0; i <= b.N; i++ {
+			newConfig("commot.json")
+		}
+	})
 }

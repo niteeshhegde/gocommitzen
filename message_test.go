@@ -203,31 +203,7 @@ func TestCreateMessage(t *testing.T) {
 	}
 
 }
-func BenchmarkConfig(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
-		newConfig("")
-	}
-}
 
-func BenchmarkConfig2(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
-		newConfig("commot.json")
-	}
-}
-
-func BenchmarkPrint(b *testing.B) {
-	os.Stdout, _ = os.Open(os.DevNull)
-	b.Run("Error", func(b *testing.B) {
-		for i := 0; i <= b.N; i++ {
-			printError("Hello World")
-		}
-	})
-	b.Run("Input", func(b *testing.B) {
-		for i := 0; i <= b.N; i++ {
-			printInput("Hello World")
-		}
-	})
-}
 func BenchmarkWordWrap(b *testing.B) {
 	os.Stdout, _ = os.Open(os.DevNull)
 	b.Run("wordWrap 10 - small", func(b *testing.B) {
@@ -252,34 +228,62 @@ func BenchmarkWordWrap(b *testing.B) {
 	})
 }
 
-func BenchmarkReadInput(b *testing.B) {
+func BenchmarkCreateMessage(b *testing.B) {
 	os.Stdout, _ = os.Open(os.DevNull)
+	var stdin bytes.Buffer
+	reader := bufio.NewReader(&stdin)
 	for _, stdInupt := range stdInupts {
 		b.Run(stdInupt.word, func(b *testing.B) {
-			var stdin bytes.Buffer
-			stdin.Write([]byte(stdInupt.word))
-			reader := bufio.NewReader(&stdin)
-			readInput(reader, stdInupt.wrap)
+			for i := 0; i <= b.N; i++ {
+				stdin.Write([]byte(stdInupt.word))
+				readInput(reader, stdInupt.wrap)
+			}
 		})
 	}
-
 }
 
-// func TestReadInput(t *testing.T) {
-// 	for _, stdInupt := range stdInupts {
-// 		t.Run(stdInupt.word, func(t *testing.T) {
-// 			var stdin bytes.Buffer
-// 			stdin.Write([]byte(stdInupt.word))
-// 			reader := bufio.NewReader(&stdin)
-// 			result := readInput(reader, stdInupt.wrap)
-// 			assertEqual(t, result, stdInupt.result, "FAILED - ReadInput() doesnt return expected results")
-// 		})
-// 	}
-// }
+func BenchmarkReadInput(b *testing.B) {
+	os.Stdout, _ = os.Open(os.DevNull)
+	var stdin bytes.Buffer
+	reader := bufio.NewReader(&stdin)
+	footer := Footer{
+		Wrap:     15,
+		Required: false,
+	}
 
-// func BenchmarkInput(b *testing.B) {
-// 	b.Run("Input")
-// 	for i := 0; i <= b.N; i++ {
-// 		printInput("Hello World")
-// 	}
-// }
+	b.Run("createMessage - type", func(b *testing.B) {
+		for i := 0; i <= b.N; i++ {
+			stdin.Write([]byte("1\n"))
+			createMessage(defaultConfig.Type, false, "type", *reader)
+		}
+	})
+
+	b.Run("createMessage - scope", func(b *testing.B) {
+		for i := 0; i <= b.N; i++ {
+			stdin.Write([]byte("test scope\n"))
+			createMessage(defaultConfig.Scope, false, "scope", *reader)
+		}
+	})
+
+	b.Run("createMessage - description", func(b *testing.B) {
+		for i := 0; i <= b.N; i++ {
+			stdin.Write([]byte("test description\n"))
+			createMessage(defaultConfig.Description, false, "description", *reader)
+		}
+	})
+
+	b.Run("createMessage - body", func(b *testing.B) {
+		for i := 0; i <= b.N; i++ {
+			stdin.Write([]byte("test body\n"))
+			createMessage(defaultConfig.Description, false, "description", *reader)
+		}
+	})
+
+	b.Run("createMessage - footer", func(b *testing.B) {
+		for i := 0; i <= b.N; i++ {
+			stdin.Write([]byte("test footer\n"))
+			createMessage(footer, false, "footer", *reader)
+		}
+	})
+
+}
